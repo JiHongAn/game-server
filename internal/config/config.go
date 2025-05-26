@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"strconv"
 )
@@ -9,8 +11,10 @@ import (
 type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
+	Redis    RedisConfig
 	JWT      JWTConfig
 	AWS      AWSConfig
+	Env      string
 }
 
 // ServerConfig 서버 설정
@@ -28,6 +32,12 @@ type DatabaseConfig struct {
 	Database string
 }
 
+// RedisConfig Redis 설정
+type RedisConfig struct {
+	Host string
+	Port int
+}
+
 // JWTConfig JWT 설정
 type JWTConfig struct {
 	PublicKey string
@@ -41,44 +51,63 @@ type AWSConfig struct {
 	S3Bucket        string
 }
 
-// Load 환경변수에서 설정을 로드
-func Load() *Config {
-	return &Config{
+// Load 환경에 따라 설정을 로드
+func Load() (*Config, error) {
+	cfg := &Config{
 		Server: ServerConfig{
-			HTTPPort:  getEnv("PORT", "8080"),
-			MatchPort: getEnv("MATCH_PORT", "8081"),
+			HTTPPort:  getEnv("PORT"),
+			MatchPort: getEnv("MATCH_PORT"),
 		},
 		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnvAsInt("DB_PORT", 5432),
-			Username: getEnv("DB_USERNAME", "postgres"),
-			Password: getEnv("DB_PASSWORD", ""),
-			Database: getEnv("DB_DATABASE", "gameserver"),
+			Host:     getEnv("DB_HOST"),
+			Port:     getEnvAsInt("DB_PORT"),
+			Username: getEnv("DB_USERNAME"),
+			Password: getEnv("DB_PASSWORD"),
+			Database: getEnv("DB_DATABASE"),
+		},
+		Redis: RedisConfig{
+			Host: getEnv("REDIS_HOST"),
+			Port: getEnvAsInt("REDIS_PORT"),
 		},
 		JWT: JWTConfig{
-			PublicKey: getEnv("JWT_PUBLIC_KEY", ""),
+			PublicKey: getEnv("JWT_PUBLIC_KEY"),
 		},
 		AWS: AWSConfig{
-			Region:          getEnv("AWS_REGION", "us-east-1"),
-			AccessKeyID:     getEnv("AWS_ACCESS_KEY_ID", ""),
-			SecretAccessKey: getEnv("AWS_SECRET_ACCESS_KEY", ""),
-			S3Bucket:        getEnv("AWS_S3_BUCKET", ""),
+			Region:          getEnv("AWS_REGION"),
+			AccessKeyID:     getEnv("AWS_ACCESS_KEY_ID"),
+			SecretAccessKey: getEnv("AWS_SECRET_ACCESS_KEY"),
+			S3Bucket:        getEnv("AWS_S3_BUCKET"),
 		},
+		Env: getEnv("ENV"),
 	}
+
+	return cfg, nil
 }
 
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
+// GetEnvFile 환경에 따른 설정 파일 경로 반환
+func GetEnvFile() string {
+	env := os.Getenv("ENV")
+	if env == "" {
+		env = "development" // ENV만 기본값 허용
 	}
-	return defaultValue
+	return fmt.Sprintf("configs/.env.%s", env)
 }
 
-func getEnvAsInt(key string, defaultValue int) int {
-	if value := os.Getenv(key); value != "" {
-		if intValue, err := strconv.Atoi(value); err == nil {
-			return intValue
-		}
+// getEnv 필수 환경변수 (없으면 서버 종료)
+func getEnv(key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		log.Fatalf("❌ Required environment variable %s is not set. Server cannot start.", key)
 	}
-	return defaultValue
+	return value
+}
+
+// getEnvAsInt 필수 정수형 환경변수 (없거나 잘못된 값이면 서버 종료)
+func getEnvAsInt(key string) int {
+	value := getEnv(key)
+	intValue, err := strconv.Atoi(value)
+	if err != nil {
+		log.Fatalf("❌ Environment variable %s must be a valid integer, got: %s. Server cannot start.", key, value)
+	}
+	return intValue
 }

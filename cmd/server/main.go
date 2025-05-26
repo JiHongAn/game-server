@@ -4,6 +4,7 @@ import (
 	"game-server/internal/config"
 	"game-server/internal/handler"
 	"game-server/internal/pkg/auth"
+	"game-server/internal/pkg/database"
 	"game-server/internal/pkg/errors"
 	"game-server/internal/pkg/response"
 	"game-server/internal/service"
@@ -36,12 +37,23 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Printf("Warning: .env file not found")
+	// 환경별 설정 파일 로드
+	envFile := config.GetEnvFile()
+	if err := godotenv.Load(envFile); err != nil {
+		log.Printf("Warning: %s file not found, trying .env", envFile)
 	}
 
 	// 설정 로드
-	cfg := config.Load()
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
+	log.Printf("Starting server in %s environment", cfg.Env)
+
+	// 데이터베이스 초기화
+	if err := database.InitDB(cfg); err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
 
 	// JWT 공개키 초기화
 	if err := auth.InitJWT(); err != nil {

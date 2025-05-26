@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"os"
@@ -29,7 +30,13 @@ func InitJWT() error {
 }
 
 func parsePublicKey(publicKeyPEM string) (*rsa.PublicKey, error) {
-	block, _ := pem.Decode([]byte(publicKeyPEM))
+	// Base64 디코딩
+	decodedKey, err := base64.StdEncoding.DecodeString(publicKeyPEM)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode base64 public key: %w", err)
+	}
+
+	block, _ := pem.Decode(decodedKey)
 	if block == nil {
 		return nil, fmt.Errorf("failed to decode PEM block")
 	}

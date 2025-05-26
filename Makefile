@@ -1,4 +1,4 @@
-.PHONY: build run test clean dev
+.PHONY: build run test clean dev run-dev run-test run-prod docker-up docker-down docker-logs
 
 # Go 관련 변수
 BINARY_NAME=game-server
@@ -14,31 +14,46 @@ build:
 	@mkdir -p $(BUILD_DIR)
 	go build -o $(BUILD_DIR)/$(BINARY_NAME) $(MAIN_PATH)
 
-# 실행
+# 실행 (기본: development)
 run:
-	@echo "Running $(BINARY_NAME)..."
-	go run $(MAIN_PATH)
+	@echo "Running $(BINARY_NAME) in development mode..."
+	ENV=development go run $(MAIN_PATH)
+
+# 환경별 실행
+run-dev:
+	@echo "Running $(BINARY_NAME) in development mode..."
+	ENV=development go run $(MAIN_PATH)
+
+run-test:
+	@echo "Running $(BINARY_NAME) in test mode..."
+	ENV=test go run $(MAIN_PATH)
+
+run-prod:
+	@echo "Running $(BINARY_NAME) in production mode..."
+	ENV=production go run $(MAIN_PATH)
 
 # 개발 모드 (hot reload)
 dev:
-	@echo "Starting development server..."
-	@if command -v air > /dev/null; then \
-		air; \
+	@echo "Starting development server with hot reload..."
+	@ENV=development; \
+	GOPATH=$$(go env GOPATH); \
+	if [ -f "$$GOPATH/bin/air" ]; then \
+		$$GOPATH/bin/air; \
 	else \
 		echo "air not found. Installing..."; \
-		go install github.com/cosmtrek/air@latest; \
-		air; \
+		go install github.com/air-verse/air@latest; \
+		$$GOPATH/bin/air; \
 	fi
 
 # 테스트
 test:
 	@echo "Running tests..."
-	go test -v ./...
+	ENV=test go test -v ./...
 
 # 테스트 커버리지
 test-coverage:
 	@echo "Running tests with coverage..."
-	go test -v -coverprofile=coverage.out ./...
+	ENV=test go test -v -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 
 # 의존성 설치
@@ -63,6 +78,25 @@ fmt:
 	@echo "Formatting code..."
 	go fmt ./...
 
+# Docker 관련 명령어 (개발용만)
+docker-up:
+	@echo "Starting development services (PostgreSQL, Redis, Adminer)..."
+	docker-compose up -d
+	@echo "Services started. Adminer available at http://localhost:8081"
+
+docker-down:
+	@echo "Stopping development services..."
+	docker-compose down
+
+docker-logs:
+	@echo "Showing logs for development services..."
+	docker-compose logs -f
+
+docker-clean:
+	@echo "Cleaning up development services and volumes..."
+	docker-compose down -v
+	docker system prune -f
+
 # 정리
 clean:
 	@echo "Cleaning..."
@@ -73,7 +107,10 @@ clean:
 help:
 	@echo "Available commands:"
 	@echo "  build         - Build the application"
-	@echo "  run           - Run the application"
+	@echo "  run           - Run the application (development)"
+	@echo "  run-dev       - Run in development environment"
+	@echo "  run-test      - Run in test environment"
+	@echo "  run-prod      - Run in production environment"
 	@echo "  dev           - Run in development mode with hot reload"
 	@echo "  test          - Run tests"
 	@echo "  test-coverage - Run tests with coverage report"
@@ -81,4 +118,8 @@ help:
 	@echo "  lint          - Run linter"
 	@echo "  fmt           - Format code"
 	@echo "  clean         - Clean build artifacts"
+	@echo "  docker-up     - Start development services (DB, Redis)"
+	@echo "  docker-down   - Stop development services"
+	@echo "  docker-logs   - Show development services logs"
+	@echo "  docker-clean  - Clean up development services and volumes"
 	@echo "  help          - Show this help" 

@@ -25,3 +25,12 @@ go.work
 
 # Build
 build/
+
+# Air hot reload
+tmp/
+build-errors.log
+
+# Env
+configs/.env.development
+configs/.env.test
+configs/.env.production
