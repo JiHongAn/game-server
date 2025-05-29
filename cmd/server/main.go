@@ -66,8 +66,9 @@ func main() {
 	}
 	log.Println("JWT public key initialized successfully")
 
-	// Match 서버 시작
-	matchServer := socket.NewMatchServer()
+	// Match 서비스 및 서버 초기화
+	matchService := service.NewMatchService()
+	matchServer := socket.NewMatchServer(matchService)
 	go func() {
 		if err := matchServer.Start(cfg.Server.MatchPort); err != nil {
 			log.Printf("Match server error: %v", err)

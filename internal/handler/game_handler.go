@@ -2,7 +2,6 @@ package handler
 
 import (
 	"game-server/internal/middleware"
-	"game-server/internal/pkg/response"
 	"game-server/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -19,21 +18,9 @@ func NewGameHandler(gameService *service.GameService) *GameHandler {
 }
 
 func (handler *GameHandler) RegisterRoutes(router *gin.Engine) {
-	private := router.Group("/games")
+	// 게임 관련 API
+	games := router.Group("/games")
 	{
-		private.Use(middleware.JwtAuth())
-		private.GET("/", handler.GetGames)
+		games.Use(middleware.JwtAuth())
 	}
-}
-
-/**
- * @GET /games 게임 목록 조회
- */
-func (handler *GameHandler) GetGames(context *gin.Context) {
-	games, err := handler.gameService.GetGames()
-	if err != nil {
-		response.Error(context, err)
-		return
-	}
-	response.Success(context, games)
 }

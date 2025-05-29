@@ -68,7 +68,6 @@ func InitMySQL(cfg *config.Config) error {
 // autoMigrateMySQL 모든 모델에 대해 Auto Migration 실행
 func autoMigrateMySQL(db *gorm.DB) error {
 	return db.AutoMigrate(
-		&domain.User{},
 		&domain.Game{},
 		&domain.Match{},
 	)
