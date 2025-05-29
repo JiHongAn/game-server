@@ -80,9 +80,8 @@ fmt:
 
 # Docker 관련 명령어 (개발용만)
 docker-up:
-	@echo "Starting development services (PostgreSQL, Redis, Adminer)..."
+	@echo "Starting development services (MySQL, Redis)..."
 	docker-compose up -d
-	@echo "Services started. Adminer available at http://localhost:8081"
 
 docker-down:
 	@echo "Stopping development services..."
@@ -122,4 +121,4 @@ help:
 	@echo "  docker-down   - Stop development services"
 	@echo "  docker-logs   - Show development services logs"
 	@echo "  docker-clean  - Clean up development services and volumes"
-	@echo "  help          - Show this help" 
+	@echo "  help          - Show this help"

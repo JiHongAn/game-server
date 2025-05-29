@@ -1,19 +1,20 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: gameserver-postgres-dev
+  mysql:
+    image: mysql:8.0
+    container_name: gameserver-mysql-dev
     environment:
-      POSTGRES_DB: gameserver_dev
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: dev_password
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: gameserver_dev
+      MYSQL_USER: gameuser
+      MYSQL_PASSWORD: dev_password
     ports:
-      - "5432:5432"
+      - "13306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,7 +23,7 @@ services:
     image: redis:7-alpine
     container_name: gameserver-redis-dev
     ports:
-      - "6379:6379"
+      - "16379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -31,17 +32,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # 개발용 데이터베이스 관리 도구 (선택사항)
-  adminer:
-    image: adminer:latest
-    container_name: gameserver-adminer-dev
-    ports:
-      - "8081:8080"
-    depends_on:
-      - postgres
-    environment:
-      ADMINER_DEFAULT_SERVER: postgres
-
 volumes:
-  postgres_data:
+  mysql_data:
   redis_data: 

@@ -34,3 +34,6 @@ build-errors.log
 configs/.env.development
 configs/.env.test
 configs/.env.production
+
+# IntelliJ
+/.idea

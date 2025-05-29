@@ -50,9 +50,14 @@ func main() {
 	}
 	log.Printf("Starting server in %s environment", cfg.Env)
 
-	// 데이터베이스 초기화
-	if err := database.InitDB(cfg); err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+	// MySQL 데이터베이스 초기화
+	if err := database.InitMySQL(cfg); err != nil {
+		log.Fatalf("Failed to initialize MySQL: %v", err)
+	}
+
+	// Redis 초기화
+	if err := database.InitRedis(cfg); err != nil {
+		log.Fatalf("Failed to initialize Redis: %v", err)
 	}
 
 	// JWT 공개키 초기화

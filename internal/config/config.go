@@ -10,7 +10,8 @@ import (
 // Config 애플리케이션 설정
 type Config struct {
 	Server   ServerConfig
-	Database DatabaseConfig
+	WriterDB WriterDBConfig
+	ReaderDB ReaderDBConfig
 	Redis    RedisConfig
 	JWT      JWTConfig
 	AWS      AWSConfig
@@ -23,8 +24,17 @@ type ServerConfig struct {
 	MatchPort string
 }
 
-// DatabaseConfig 데이터베이스 설정
-type DatabaseConfig struct {
+// WriterDBConfig 데이터베이스 설정 (Writer)
+type WriterDBConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	Database string
+}
+
+// ReaderDBConfig 데이터베이스 설정 (Reader)
+type ReaderDBConfig struct {
 	Host     string
 	Port     int
 	Username string
@@ -58,12 +68,19 @@ func Load() (*Config, error) {
 			HTTPPort:  getEnv("PORT"),
 			MatchPort: getEnv("MATCH_PORT"),
 		},
-		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST"),
-			Port:     getEnvAsInt("DB_PORT"),
-			Username: getEnv("DB_USERNAME"),
-			Password: getEnv("DB_PASSWORD"),
-			Database: getEnv("DB_DATABASE"),
+		WriterDB: WriterDBConfig{
+			Host:     getEnv("WRITER_DB_HOST"),
+			Port:     getEnvAsInt("WRITER_DB_PORT"),
+			Username: getEnv("WRITER_DB_USERNAME"),
+			Password: getEnv("WRITER_DB_PASSWORD"),
+			Database: getEnv("WRITER_DB_DATABASE"),
+		},
+		ReaderDB: ReaderDBConfig{
+			Host:     getEnv("READER_DB_HOST"),
+			Port:     getEnvAsInt("READER_DB_PORT"),
+			Username: getEnv("READER_DB_USERNAME"),
+			Password: getEnv("READER_DB_PASSWORD"),
+			Database: getEnv("READER_DB_DATABASE"),
 		},
 		Redis: RedisConfig{
 			Host: getEnv("REDIS_HOST"),
